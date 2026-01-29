@@ -1,0 +1,7 @@
+<Solution>
+  <Project Path="Trackflow.API/Trackflow.API.csproj" />
+  <Project Path="Trackflow.Application/Trackflow.Application.csproj" />
+  <Project Path="Trackflow.Client/Trackflow.Client.csproj" />
+  <Project Path="Trackflow.Domain/Trackflow.Domain.csproj" />
+  <Project Path="Trackflow.Infrastructure/Trackflow.Infrastructure.csproj" />
+</Solution>

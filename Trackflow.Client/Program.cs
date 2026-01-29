@@ -1,0 +1,13 @@
+using Trackflow.Client.Forms;
+
+namespace Trackflow.Client;
+
+static class Program
+{
+    [STAThread]
+    static void Main()
+    {
+        ApplicationConfiguration.Initialize();
+        Application.Run(new MainForm());
+    }
+}
