@@ -23,7 +23,7 @@ services:
       dockerfile: Trackflow.API/Dockerfile
     container_name: trackflow-api
     ports:
-      - "5000:8080"
+      - "5101:8080"
     depends_on:
       sqlserver:
         condition: service_healthy

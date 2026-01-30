@@ -1,7 +1,7 @@
 # Trackflow - Yapılacaklar Listesi
 
 > Ödev gereksinimlerine (whatsapp.md) dayalı geliştirme planı.
-> Son güncelleme: 2026-01-29
+> Son güncelleme: 2026-01-30
 
 ---
 
@@ -13,77 +13,90 @@
   - [x] `Trackflow.Infrastructure` (Class Library)
   - [x] `Trackflow.API` (ASP.NET Core Web API)
   - [x] `Trackflow.Client` (Windows Forms)
+  - [x] `Trackflow.Shared` (Class Library - Paylaşımlı DTO'lar)
 - [x] Proje referanslarını bağla
 - [x] Docker yapısını kur (docker-compose + Dockerfile)
 
 ---
 
 ## 2. Domain Katmanı (Entity'ler)
-- [ ] `BaseEntity` - Ortak alanlar (Id, CreatedAt, UpdatedAt)
-- [ ] `Customer` - Müşteri bilgileri
+- [x] `BaseEntity` - Ortak alanlar (Id, CreatedAt, UpdatedAt)
+- [x] `Customer` - Müşteri bilgileri
   - Id, FirmaAdi, GLN, Aciklama
-- [ ] `Product` - Ürün bilgileri
+- [x] `Product` - Ürün bilgileri
   - Id, CustomerId, GTIN, UrunAdi
-- [ ] `WorkOrder` - İş emri
+- [x] `WorkOrder` - İş emri
   - Id, ProductId, Miktar, LotNo, SonKullanmaTarihi, SeriBaslangic, Durum
-- [ ] `SerialNumber` - Seri numaraları
+- [x] `SerialNumber` - Seri numaraları
   - Id, WorkOrderId, SeriNo, Durum, GS1Barkod
-- [ ] `PackingUnit` - Koli/Palet (Agregasyon)
+- [x] `PackingUnit` - Koli/Palet (Agregasyon)
   - Id, ParentId, Tip (Koli/Palet), SSCC
-- [ ] Enum'lar (WorkOrderStatus, SerialNumberStatus, PackingUnitType)
+- [x] Enum'lar (WorkOrderStatus, SerialNumberStatus, PackingUnitType)
 
 ---
 
 ## 3. Infrastructure (Veritabanı)
-- [ ] AppDbContext oluştur
-- [ ] Entity konfigürasyonları (Fluent API)
-  - [ ] Foreign Key'ler
-  - [ ] Unique constraint'ler (GTIN, GLN, SSCC benzersiz olmalı)
-- [ ] İlk migration'ı oluştur
-- [ ] Program.cs'de auto-migrate ekle
+- [x] AppDbContext oluştur
+- [x] Entity konfigürasyonları (Fluent API)
+  - [x] Foreign Key'ler
+  - [x] Unique constraint'ler (GTIN, GLN, SSCC benzersiz olmalı)
+- [x] İlk migration'ı oluştur
+- [x] Program.cs'de auto-migrate ekle
 
 ---
 
 ## 4. Application (Servisler)
-- [ ] `CustomerService` - Müşteri CRUD
-- [ ] `ProductService` - Ürün CRUD
-- [ ] `WorkOrderService` - İş emri yönetimi + seri üretimi
-- [ ] `GS1Service` - Barkod string oluşturma
+- [x] `CustomerService` - Müşteri CRUD
+- [x] `ProductService` - Ürün CRUD
+- [x] `WorkOrderService` - İş emri yönetimi + seri üretimi
+- [x] `GS1Service` - Barkod string oluşturma
   - (01) GTIN + (21) Seri + (17) SKT + (10) Lot birleştirme
-- [ ] `SSCCGenerator` - SSCC kodu üretimi (Luhn algoritması)
-- [ ] `AggregationService` - Ürün->Koli->Palet hiyerarşisi
-- [ ] DTO'lar (Request/Response modelleri)
+- [x] `SSCCGenerator` - SSCC kodu üretimi (Luhn algoritması)
+- [x] `AggregationService` - Ürün->Koli->Palet hiyerarşisi
+- [x] DTO'lar (Request/Response modelleri)
 
 ---
 
 ## 5. API Endpoints
-- [ ] **Müşteri**
+- [x] **Müşteri**
   - POST /api/customers
   - GET /api/customers
-- [ ] **Ürün**
+  - PUT /api/customers/{id}
+  - DELETE /api/customers/{id}
+  - GET /api/customers/generate-gln
+- [x] **Ürün**
   - POST /api/products
   - GET /api/products
-- [ ] **İş Emri**
+  - PUT /api/products/{id}
+  - DELETE /api/products/{id}
+- [x] **İş Emri**
   - POST /api/workorders
-  - GET /api/workorders/{id}/detail (TEK RESPONSE)
-- [ ] Swagger UI aktif et
-- [ ] Basit hata yönetimi middleware
+  - GET /api/workorders
+  - GET /api/workorders/{id}/detail
+  - POST /api/workorders/{id}/aggregate
+  - DELETE /api/workorders/{id}
+- [x] **Sistem**
+  - GET /api/health (detaylı health check)
+- [x] Swagger UI aktif et
 
 ---
 
 ## 6. Windows Forms Client
-- [ ] Ana form tasarımı
-- [ ] API bağlantısı (HttpClient)
-- [ ] Müşteri/Ürün listesi
-- [ ] İş emri başlatma
-- [ ] Etiket basım simülasyonu
+- [x] Ana form tasarımı (side menu + content panel)
+- [x] API bağlantısı (HttpClient)
+- [x] Müşteri listesi + CRUD (Ekle, Düzenle, Sil)
+- [x] Ürün listesi + CRUD (Ekle, Düzenle, Sil)
+- [x] İş emri listesi + CRUD (Ekle, Sil)
+- [x] İş emri detay görüntüleme
+- [x] Agregasyon işlemi
+- [x] Ayarlar sayfası (API URL test, sistem durumu)
 
 ---
 
 ## 7. Son Kontroller
-- [ ] docker-compose up ile test
-- [ ] README güncelle
-- [ ] Kod temizliği
+- [x] docker-compose up ile test
+- [x] README güncelle
+- [x] Kod temizliği
 
 ---
 

@@ -12,13 +12,13 @@
 docker-compose up -d
 ```
 
-**Swagger:** http://localhost:5000/swagger
+**Swagger:** http://localhost:5101/swagger
 
 **Bileşenler:**
 | Servis | Port | Açıklama |
 |--------|------|----------|
 | sqlserver | 1433 | MSSQL 2022 |
-| api | 5000 | ASP.NET Core Web API |
+| api | 5101 | ASP.NET Core Web API |
 
 **Connection String:**
 ```

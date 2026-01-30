@@ -6,6 +6,7 @@ WORKDIR /src
 COPY Trackflow.Domain/Trackflow.Domain.csproj Trackflow.Domain/
 COPY Trackflow.Application/Trackflow.Application.csproj Trackflow.Application/
 COPY Trackflow.Infrastructure/Trackflow.Infrastructure.csproj Trackflow.Infrastructure/
+COPY Trackflow.Shared/Trackflow.Shared.csproj Trackflow.Shared/
 COPY Trackflow.API/Trackflow.API.csproj Trackflow.API/
 RUN dotnet restore Trackflow.API/Trackflow.API.csproj
 
@@ -13,6 +14,7 @@ RUN dotnet restore Trackflow.API/Trackflow.API.csproj
 COPY Trackflow.Domain/ Trackflow.Domain/
 COPY Trackflow.Application/ Trackflow.Application/
 COPY Trackflow.Infrastructure/ Trackflow.Infrastructure/
+COPY Trackflow.Shared/ Trackflow.Shared/
 COPY Trackflow.API/ Trackflow.API/
 RUN dotnet publish Trackflow.API/Trackflow.API.csproj -c Release -o /app/publish --no-restore
 
