@@ -17,6 +17,14 @@ public class ApiClient
         _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
     }
 
+    public string BaseUrl => _httpClient.BaseAddress?.ToString() ?? "";
+
+    public async Task<HealthReportDto?> TestConnectionAsync(string url)
+    {
+        using var testClient = new HttpClient { BaseAddress = new Uri(url.TrimEnd('/')) };
+        return await testClient.GetFromJsonAsync<HealthReportDto>("/api/health", _jsonOptions);
+    }
+
     // Health
     public async Task<HealthReportDto?> GetHealthAsync()
     {

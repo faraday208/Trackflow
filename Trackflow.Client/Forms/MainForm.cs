@@ -36,21 +36,22 @@ public class MainForm : Form
         };
         menuPanel.Controls.Add(titleLabel);
 
-        var btnHealth = CreateMenuButton("Sistem Durumu", 80);
-        btnHealth.Click += async (s, e) => await ShowHealthAsync();
-        menuPanel.Controls.Add(btnHealth);
-
-        var btnCustomers = CreateMenuButton("Müşteriler", 130);
+        var btnCustomers = CreateMenuButton("Müşteriler", 80);
         btnCustomers.Click += async (s, e) => await ShowCustomersAsync();
         menuPanel.Controls.Add(btnCustomers);
 
-        var btnProducts = CreateMenuButton("Ürünler", 180);
+        var btnProducts = CreateMenuButton("Ürünler", 130);
         btnProducts.Click += async (s, e) => await ShowProductsAsync();
         menuPanel.Controls.Add(btnProducts);
 
-        var btnWorkOrders = CreateMenuButton("İş Emirleri", 230);
+        var btnWorkOrders = CreateMenuButton("İş Emirleri", 180);
         btnWorkOrders.Click += async (s, e) => await ShowWorkOrdersAsync();
         menuPanel.Controls.Add(btnWorkOrders);
+
+        var btnSettings = CreateMenuButton("Ayarlar", menuPanel.Height - 60);
+        btnSettings.Anchor = AnchorStyles.Bottom | AnchorStyles.Left;
+        btnSettings.Click += (s, e) => ShowSettingsPage();
+        menuPanel.Controls.Add(btnSettings);
 
         // Status Bar
         _statusLabel = new Label
@@ -76,7 +77,7 @@ public class MainForm : Form
         Controls.Add(menuPanel);
         Controls.Add(_statusLabel);
 
-        Load += async (s, e) => await ShowHealthAsync();
+        Load += (s, e) => ShowSettingsPage();
     }
 
     private Button CreateMenuButton(string text, int top)
@@ -169,6 +170,130 @@ public class MainForm : Form
         catch (Exception ex)
         {
             ShowError("API bağlantı hatası", ex.Message);
+        }
+    }
+
+    private void ShowSettingsPage()
+    {
+        ClearContent();
+        SetStatus("Ayarlar");
+
+        var titleLabel = new Label
+        {
+            Text = "Ayarlar",
+            Font = new Font("Segoe UI", 18, FontStyle.Bold),
+            Location = new Point(20, 20),
+            AutoSize = true
+        };
+        _contentPanel.Controls.Add(titleLabel);
+
+        // API Bağlantısı Bölümü
+        var apiGroupBox = new GroupBox
+        {
+            Text = "API Bağlantısı",
+            Location = new Point(20, 70),
+            Size = new Size(500, 120),
+            Font = new Font("Segoe UI", 10)
+        };
+
+        var lblApiUrl = new Label
+        {
+            Text = "API URL:",
+            Location = new Point(15, 30),
+            AutoSize = true
+        };
+        apiGroupBox.Controls.Add(lblApiUrl);
+
+        var txtApiUrl = new TextBox
+        {
+            Text = _apiClient.BaseUrl,
+            Location = new Point(15, 55),
+            Size = new Size(350, 25)
+        };
+        apiGroupBox.Controls.Add(txtApiUrl);
+
+        var btnTestConnection = new Button
+        {
+            Text = "Bağlantıyı Test Et",
+            Location = new Point(375, 53),
+            Size = new Size(110, 28),
+            BackColor = Color.FromArgb(0, 122, 204),
+            ForeColor = Color.White,
+            FlatStyle = FlatStyle.Flat,
+            Cursor = Cursors.Hand
+        };
+        btnTestConnection.Click += async (s, e) =>
+        {
+            try
+            {
+                btnTestConnection.Enabled = false;
+                btnTestConnection.Text = "Test ediliyor...";
+
+                var testUrl = txtApiUrl.Text.Trim();
+                var health = await _apiClient.TestConnectionAsync(testUrl);
+                MessageBox.Show(
+                    $"Bağlantı başarılı!\n\nSistem Durumu: {health?.Status ?? "Bilinmiyor"}",
+                    "Başarılı",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Information);
+            }
+            catch (Exception ex)
+            {
+                MessageBox.Show(
+                    $"Bağlantı hatası:\n{ex.Message}",
+                    "Hata",
+                    MessageBoxButtons.OK,
+                    MessageBoxIcon.Error);
+            }
+            finally
+            {
+                btnTestConnection.Enabled = true;
+                btnTestConnection.Text = "Bağlantıyı Test Et";
+            }
+        };
+        apiGroupBox.Controls.Add(btnTestConnection);
+
+        _contentPanel.Controls.Add(apiGroupBox);
+
+        // Sistem Durumu Bölümü
+        var healthGroupBox = new GroupBox
+        {
+            Text = "Sistem Durumu",
+            Location = new Point(20, 210),
+            Size = new Size(500, 100),
+            Font = new Font("Segoe UI", 10)
+        };
+
+        var lblHealthStatus = new Label
+        {
+            Text = "Yükleniyor...",
+            Location = new Point(15, 30),
+            AutoSize = true
+        };
+        healthGroupBox.Controls.Add(lblHealthStatus);
+
+        _contentPanel.Controls.Add(healthGroupBox);
+
+        // Sistem durumunu async olarak yükle
+        _ = LoadHealthStatusAsync(lblHealthStatus);
+    }
+
+    private async Task LoadHealthStatusAsync(Label lblHealthStatus)
+    {
+        try
+        {
+            var health = await _apiClient.GetHealthAsync();
+            var status = health?.Status ?? "Bilinmiyor";
+            var dbCheck = health?.Checks?.FirstOrDefault(c => c.Name == "database");
+            var dbStatus = dbCheck?.Status ?? "Bilinmiyor";
+
+            lblHealthStatus.Text = $"API: {status}  |  Veritabanı: {dbStatus}";
+            lblHealthStatus.ForeColor = status == "Healthy" ? Color.DarkGreen : Color.Red;
+        }
+        catch
+        {
+            lblHealthStatus.Text = "Bağlantı kurulamadı";
+            lblHealthStatus.ForeColor = Color.Red;
         }
     }
 
