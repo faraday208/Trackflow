@@ -20,7 +20,7 @@ public class MainForm : Form
         var menuPanel = new Panel
         {
             Dock = DockStyle.Left,
-            Width = 200,
+            Width = 250,
             BackColor = Color.FromArgb(45, 45, 48)
         };
 
@@ -87,7 +87,7 @@ public class MainForm : Form
         {
             Text = text,
             Location = new Point(10, top),
-            Size = new Size(180, 40),
+            Size = new Size(230, 40),
             FlatStyle = FlatStyle.Flat,
             BackColor = Color.FromArgb(62, 62, 66),
             ForeColor = Color.White,
