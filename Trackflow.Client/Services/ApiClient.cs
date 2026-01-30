@@ -119,4 +119,69 @@ public class ApiClient
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<AggregationResultDto>(_jsonOptions);
     }
+
+    public async Task ResetWorkOrderAsync(Guid id)
+    {
+        var response = await _httpClient.PostAsync($"/api/workorders/{id}/reset", null);
+        response.EnsureSuccessStatusCode();
+    }
+
+    // Serialization - Print
+    public async Task<PrintBatchResult?> PrintSerialsAsync(Guid workOrderId, int? count = null)
+    {
+        var url = count.HasValue
+            ? $"/api/serialization/{workOrderId}/print/{count.Value}"
+            : $"/api/serialization/{workOrderId}/print";
+        var response = await _httpClient.PostAsync(url, null);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<PrintBatchResult>(_jsonOptions);
+    }
+
+    // Serialization - Verify
+    public async Task<VerifyBatchResult?> VerifySerialsAsync(Guid workOrderId)
+    {
+        var response = await _httpClient.PostAsync($"/api/serialization/{workOrderId}/verify", null);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<VerifyBatchResult>(_jsonOptions);
+    }
+
+    public async Task<VerifyResult?> VerifySingleAsync(Guid serialId)
+    {
+        var response = await _httpClient.PostAsync($"/api/serialization/{serialId}/verify-single", null);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<VerifyResult>(_jsonOptions);
+    }
+
+    public async Task<VerifyResult?> RetryVerifyAsync(Guid serialId)
+    {
+        var response = await _httpClient.PostAsync($"/api/serialization/{serialId}/retry-verify", null);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<VerifyResult>(_jsonOptions);
+    }
+
+    // Serialization - Status
+    public async Task<ProductionStatus?> GetProductionStatusAsync(Guid workOrderId)
+    {
+        return await _httpClient.GetFromJsonAsync<ProductionStatus>($"/api/serialization/{workOrderId}/status", _jsonOptions);
+    }
+
+    // PLC
+    public async Task<PLCStatus?> StartProductionAsync(Guid workOrderId)
+    {
+        var response = await _httpClient.PostAsync($"/api/plc/{workOrderId}/start", null);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<PLCStatus>(_jsonOptions);
+    }
+
+    public async Task<PLCStatus?> StopProductionAsync(Guid workOrderId)
+    {
+        var response = await _httpClient.PostAsync($"/api/plc/{workOrderId}/stop", null);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<PLCStatus>(_jsonOptions);
+    }
+
+    public async Task<PLCStatus?> GetPLCStatusAsync(Guid workOrderId)
+    {
+        return await _httpClient.GetFromJsonAsync<PLCStatus>($"/api/plc/{workOrderId}/status", _jsonOptions);
+    }
 }

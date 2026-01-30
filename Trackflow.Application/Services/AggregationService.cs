@@ -18,6 +18,7 @@ public class AggregationService
 
     /// <summary>
     /// İş emri için otomatik agregasyon yapar
+    /// - Sadece "Verified" durumundaki serileri agregasyona dahil eder
     /// - Önce seri numaralarını kolilere böler
     /// - Sonra kolileri paletlere böler
     /// </summary>
@@ -33,11 +34,11 @@ public class AggregationService
         if (workOrder == null)
             throw new ArgumentException("Work order not found");
 
-        // Mevcut agregasyonu temizle
-        foreach (var serial in workOrder.SerialNumbers)
+        // Mevcut agregasyonu temizle (agrege edilmiş serileri başa al)
+        foreach (var serial in workOrder.SerialNumbers.Where(s => s.Durum == SerialNumberStatus.Aggregated))
         {
             serial.PackingUnitId = null;
-            serial.Durum = SerialNumberStatus.Generated;
+            serial.Durum = SerialNumberStatus.Generated; // Agrege'den Generated'a geri dön (iş akışı baştan başlar)
         }
         _context.PackingUnits.RemoveRange(workOrder.PackingUnits);
         await _context.SaveChangesAsync();
@@ -45,11 +46,14 @@ public class AggregationService
         var companyPrefix = workOrder.Product.Customer.GLN[..7];
         var ssccGenerator = new SSCCGenerator(companyPrefix, 1);
 
-        // Agrege edilmemiş seri numaralarını al
+        // Sadece "Verified" durumundaki serileri al (iş akışı: Generated -> Printed -> Verified -> Aggregated)
         var availableSerials = workOrder.SerialNumbers
-            .Where(s => s.PackingUnitId == null)
+            .Where(s => s.Durum == SerialNumberStatus.Verified)
             .OrderBy(s => s.SeriNo)
             .ToList();
+
+        if (availableSerials.Count == 0)
+            throw new ArgumentException("Agregasyon için doğrulanmış (Verified) seri numarası bulunamadı. Önce serileri yazdırın ve doğrulayın.");
 
         var boxes = new List<PackingUnit>();
         var pallets = new List<PackingUnit>();
@@ -125,7 +129,7 @@ public class AggregationService
     }
 
     /// <summary>
-    /// Belirli seri numaralarını bir koliye ekler
+    /// Belirli seri numaralarını bir koliye ekler (sadece Verified durumundakiler)
     /// </summary>
     public async Task<PackingUnitDto> CreateBoxAsync(Guid workOrderId, List<Guid> serialNumberIds)
     {
@@ -137,12 +141,16 @@ public class AggregationService
         if (workOrder == null)
             throw new ArgumentException("Work order not found");
 
+        // Sadece Verified durumunda ve henüz agrege edilmemiş serileri al
         var serials = await _context.SerialNumbers
-            .Where(s => serialNumberIds.Contains(s.Id) && s.WorkOrderId == workOrderId && s.PackingUnitId == null)
+            .Where(s => serialNumberIds.Contains(s.Id) &&
+                       s.WorkOrderId == workOrderId &&
+                       s.PackingUnitId == null &&
+                       s.Durum == SerialNumberStatus.Verified)
             .ToListAsync();
 
         if (serials.Count != serialNumberIds.Count)
-            throw new ArgumentException("Some serial numbers are not available");
+            throw new ArgumentException("Bazı seri numaraları uygun değil. Sadece doğrulanmış (Verified) ve henüz agrege edilmemiş seriler seçilebilir.");
 
         var companyPrefix = workOrder.Product.Customer.GLN[..7];
         var existingBoxCount = await _context.PackingUnits

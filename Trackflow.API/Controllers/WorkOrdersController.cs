@@ -120,4 +120,14 @@ public class WorkOrdersController : ControllerBase
 
         return NoContent();
     }
+
+    [HttpPost("{id:guid}/reset")]
+    public async Task<IActionResult> Reset(Guid id)
+    {
+        var result = await _workOrderService.ResetWorkOrderAsync(id);
+        if (!result)
+            return NotFound();
+
+        return NoContent();
+    }
 }

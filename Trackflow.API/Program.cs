@@ -18,6 +18,9 @@ builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<WorkOrderService>();
 builder.Services.AddScoped<AggregationService>();
 builder.Services.AddScoped<GS1Service>();
+builder.Services.AddScoped<PrinterService>();
+builder.Services.AddScoped<CameraService>();
+builder.Services.AddScoped<PLCService>();
 
 // Controllers
 builder.Services.AddControllers();

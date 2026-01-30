@@ -729,6 +729,9 @@ public class MainForm : Form
                 return;
             }
 
+            // Üretim durumu istatistiklerini al
+            var productionStatus = await _apiClient.GetProductionStatusAsync(id);
+
             var titleLabel = new Label
             {
                 Text = $"İş Emri Detayı - {detail.LotNo}",
@@ -738,17 +741,17 @@ public class MainForm : Form
             };
             _contentPanel.Controls.Add(titleLabel);
 
+            // Temel bilgi paneli
             var infoPanel = new Panel
             {
                 Location = new Point(20, 70),
-                Size = new Size(_contentPanel.Width - 60, 120),
+                Size = new Size(_contentPanel.Width - 60, 80),
                 BackColor = Color.FromArgb(240, 240, 240)
             };
 
             var info = $"Ürün: {detail.Product.UrunAdi} | GTIN: {detail.Product.GTIN}\n" +
                        $"Müşteri: {detail.Customer.FirmaAdi} | GLN: {detail.Customer.GLN}\n" +
-                       $"Miktar: {detail.Miktar} | Lot: {detail.LotNo} | SKT: {detail.SonKullanmaTarihi:dd.MM.yyyy}\n" +
-                       $"Toplam Seri: {detail.TotalSerials} | Agrege: {detail.AggregatedSerials} | Koli: {detail.TotalBoxes} | Palet: {detail.TotalPallets}";
+                       $"Miktar: {detail.Miktar} | Lot: {detail.LotNo} | SKT: {detail.SonKullanmaTarihi:dd.MM.yyyy}";
 
             var infoLabel = new Label
             {
@@ -760,49 +763,219 @@ public class MainForm : Form
             infoPanel.Controls.Add(infoLabel);
             _contentPanel.Controls.Add(infoPanel);
 
+            // Üretim durumu istatistikleri paneli
+            var statsPanel = new Panel
+            {
+                Location = new Point(20, 160),
+                Size = new Size(_contentPanel.Width - 60, 60),
+                BackColor = Color.FromArgb(230, 245, 255)
+            };
+
+            var statsLabel = new Label
+            {
+                Text = $"Üretildi: {productionStatus?.Generated ?? 0} | " +
+                       $"Basıldı: {productionStatus?.Printed ?? 0} | " +
+                       $"Doğrulandı: {productionStatus?.Verified ?? 0} | " +
+                       $"Reddedildi: {productionStatus?.Rejected ?? 0} | " +
+                       $"Agrege: {productionStatus?.Aggregated ?? 0}",
+                Location = new Point(10, 10),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 11, FontStyle.Bold)
+            };
+            statsPanel.Controls.Add(statsLabel);
+
+            var runningLabel = new Label
+            {
+                Text = productionStatus?.IsRunning == true ? "Üretim Çalışıyor" : "Üretim Durmuş",
+                Location = new Point(10, 35),
+                AutoSize = true,
+                Font = new Font("Segoe UI", 9),
+                ForeColor = productionStatus?.IsRunning == true ? Color.Green : Color.Gray
+            };
+            statsPanel.Controls.Add(runningLabel);
+
+            _contentPanel.Controls.Add(statsPanel);
+
+            // Aksiyon butonları paneli
+            var actionPanel = new Panel
+            {
+                Location = new Point(20, 230),
+                Size = new Size(_contentPanel.Width - 60, 50),
+                BackColor = Color.White
+            };
+
+            var btnPrint = new Button
+            {
+                Text = "Yazdır",
+                Location = new Point(0, 5),
+                Size = new Size(100, 40),
+                BackColor = Color.FromArgb(40, 167, 69),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnPrint.Click += async (s, e) => await PrintSerialsAsync(id);
+            actionPanel.Controls.Add(btnPrint);
+
+            var btnVerify = new Button
+            {
+                Text = "Doğrula",
+                Location = new Point(110, 5),
+                Size = new Size(100, 40),
+                BackColor = Color.FromArgb(23, 162, 184),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnVerify.Click += async (s, e) => await VerifySerialsAsync(id);
+            actionPanel.Controls.Add(btnVerify);
+
+            var btnAggregate = new Button
+            {
+                Text = "Agregasyon",
+                Location = new Point(220, 5),
+                Size = new Size(100, 40),
+                BackColor = Color.FromArgb(0, 122, 204),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnAggregate.Click += async (s, e) =>
+            {
+                await AggregateWorkOrderAsync(id);
+                await ShowWorkOrderDetailAsync(id);
+            };
+            actionPanel.Controls.Add(btnAggregate);
+
+            var btnRefresh = new Button
+            {
+                Text = "Yenile",
+                Location = new Point(330, 5),
+                Size = new Size(80, 40),
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnRefresh.Click += async (s, e) => await ShowWorkOrderDetailAsync(id);
+            actionPanel.Controls.Add(btnRefresh);
+
+            var btnReset = new Button
+            {
+                Text = "Resetle",
+                Location = new Point(420, 5),
+                Size = new Size(100, 40),
+                BackColor = Color.FromArgb(255, 193, 7),
+                ForeColor = Color.Black,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnReset.Click += async (s, e) =>
+            {
+                var result = MessageBox.Show(
+                    "İş emrini resetlemek istediğinizden emin misiniz?\n\n" +
+                    "Bu işlem:\n" +
+                    "• Tüm serileri 'Üretildi' durumuna döndürecek\n" +
+                    "• Tüm koli ve paletleri silecek\n" +
+                    "• İş emri durumunu 'Oluşturuldu' yapacak",
+                    "Resetleme Onayı",
+                    MessageBoxButtons.YesNo,
+                    MessageBoxIcon.Warning);
+
+                if (result == DialogResult.Yes)
+                {
+                    await ResetWorkOrderAsync(id);
+                }
+            };
+            actionPanel.Controls.Add(btnReset);
+
+            _contentPanel.Controls.Add(actionPanel);
+
             // Serial Numbers Grid
             var serialLabel = new Label
             {
                 Text = "Seri Numaraları",
                 Font = new Font("Segoe UI", 12, FontStyle.Bold),
-                Location = new Point(20, 200),
+                Location = new Point(20, 290),
                 AutoSize = true
             };
             _contentPanel.Controls.Add(serialLabel);
 
             var serialGrid = new DataGridView
             {
-                Location = new Point(20, 230),
-                Size = new Size(_contentPanel.Width - 60, _contentPanel.Height - 300),
+                Location = new Point(20, 320),
+                Size = new Size(_contentPanel.Width - 60, _contentPanel.Height - 400),
                 Anchor = AnchorStyles.Top | AnchorStyles.Left | AnchorStyles.Right | AnchorStyles.Bottom,
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 ReadOnly = true,
                 AllowUserToAddRows = false,
                 BackgroundColor = Color.White,
-                BorderStyle = BorderStyle.None
+                BorderStyle = BorderStyle.None,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect
             };
 
+            serialGrid.Columns.Add("Id", "ID");
+            serialGrid.Columns["Id"]!.Visible = false;
             serialGrid.Columns.Add("SeriNo", "Seri No");
             serialGrid.Columns.Add("GS1Barkod", "GS1 Barkod");
             serialGrid.Columns.Add("Durum", "Durum");
 
             string[] durumlar = { "Üretildi", "Basıldı", "Doğrulandı", "Reddedildi", "Agrege" };
 
-            foreach (var s in detail.SerialNumbers.Take(100)) // İlk 100
+            foreach (var s in detail.SerialNumbers.Take(100))
             {
                 var durumInt = (int)s.Durum;
                 var durum = durumInt >= 0 && durumInt < durumlar.Length ? durumlar[durumInt] : "?";
-                serialGrid.Rows.Add(s.SeriNo, s.GS1Barkod, durum);
+                serialGrid.Rows.Add(s.Id, s.SeriNo, s.GS1Barkod, durum);
+            }
+
+            // Durum renklerini ayarla
+            foreach (DataGridViewRow row in serialGrid.Rows)
+            {
+                var durum = row.Cells["Durum"].Value?.ToString();
+                row.DefaultCellStyle.BackColor = durum switch
+                {
+                    "Üretildi" => Color.FromArgb(255, 255, 230),
+                    "Basıldı" => Color.FromArgb(230, 255, 230),
+                    "Doğrulandı" => Color.FromArgb(230, 255, 255),
+                    "Reddedildi" => Color.FromArgb(255, 230, 230),
+                    "Agrege" => Color.FromArgb(240, 240, 255),
+                    _ => Color.White
+                };
             }
 
             _contentPanel.Controls.Add(serialGrid);
 
+            // Reddedilmiş seri için tekrar doğrula butonu
+            var btnRetryVerify = new Button
+            {
+                Text = "Seçili Seriyi Tekrar Doğrula",
+                Location = new Point(20, _contentPanel.Height - 60),
+                Size = new Size(200, 35),
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Left,
+                BackColor = Color.FromArgb(255, 193, 7),
+                ForeColor = Color.Black
+            };
+            btnRetryVerify.Click += async (s, e) =>
+            {
+                if (serialGrid.SelectedRows.Count > 0)
+                {
+                    var serialId = Guid.Parse(serialGrid.SelectedRows[0].Cells["Id"].Value?.ToString() ?? "");
+                    var durum = serialGrid.SelectedRows[0].Cells["Durum"].Value?.ToString();
+                    if (durum != "Reddedildi")
+                    {
+                        MessageBox.Show("Sadece reddedilmiş seriler tekrar doğrulanabilir.", "Uyarı", MessageBoxButtons.OK, MessageBoxIcon.Warning);
+                        return;
+                    }
+                    await RetryVerifySingleAsync(serialId, id);
+                }
+            };
+            _contentPanel.Controls.Add(btnRetryVerify);
+
             var btnBack = new Button
             {
                 Text = "< Geri",
-                Location = new Point(20, _contentPanel.Height - 50),
+                Location = new Point(_contentPanel.Width - 120, _contentPanel.Height - 60),
                 Size = new Size(100, 35),
-                Anchor = AnchorStyles.Bottom | AnchorStyles.Left
+                Anchor = AnchorStyles.Bottom | AnchorStyles.Right
             };
             btnBack.Click += async (s, e) => await ShowWorkOrdersAsync();
             _contentPanel.Controls.Add(btnBack);
@@ -812,6 +985,77 @@ public class MainForm : Form
         catch (Exception ex)
         {
             ShowError("Detay yüklenemedi", ex.Message);
+        }
+    }
+
+    private async Task PrintSerialsAsync(Guid workOrderId)
+    {
+        SetStatus("Seriler yazdırılıyor...");
+
+        try
+        {
+            var result = await _apiClient.PrintSerialsAsync(workOrderId);
+            MessageBox.Show(
+                $"Yazdırma tamamlandı!\n\n" +
+                $"Toplam: {result?.Total}\n" +
+                $"Başarılı: {result?.Printed}\n" +
+                $"Başarısız: {result?.Failed}",
+                "Yazdırma Sonucu",
+                MessageBoxButtons.OK,
+                result?.Failed > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+            await ShowWorkOrderDetailAsync(workOrderId);
+        }
+        catch (Exception ex)
+        {
+            ShowError("Yazdırma başarısız", ex.Message);
+        }
+    }
+
+    private async Task VerifySerialsAsync(Guid workOrderId)
+    {
+        SetStatus("Seriler doğrulanıyor...");
+
+        try
+        {
+            var result = await _apiClient.VerifySerialsAsync(workOrderId);
+            MessageBox.Show(
+                $"Doğrulama tamamlandı!\n\n" +
+                $"Toplam: {result?.Total}\n" +
+                $"Doğrulandı: {result?.Verified}\n" +
+                $"Reddedildi: {result?.Rejected}",
+                "Doğrulama Sonucu",
+                MessageBoxButtons.OK,
+                result?.Rejected > 0 ? MessageBoxIcon.Warning : MessageBoxIcon.Information);
+
+            await ShowWorkOrderDetailAsync(workOrderId);
+        }
+        catch (Exception ex)
+        {
+            ShowError("Doğrulama başarısız", ex.Message);
+        }
+    }
+
+    private async Task RetryVerifySingleAsync(Guid serialId, Guid workOrderId)
+    {
+        SetStatus("Seri tekrar doğrulanıyor...");
+
+        try
+        {
+            var result = await _apiClient.RetryVerifyAsync(serialId);
+            MessageBox.Show(
+                result?.Success == true
+                    ? "Seri numarası başarıyla doğrulandı!"
+                    : $"Doğrulama başarısız: {result?.Message}",
+                "Tekrar Doğrulama",
+                MessageBoxButtons.OK,
+                result?.Success == true ? MessageBoxIcon.Information : MessageBoxIcon.Warning);
+
+            await ShowWorkOrderDetailAsync(workOrderId);
+        }
+        catch (Exception ex)
+        {
+            ShowError("Tekrar doğrulama başarısız", ex.Message);
         }
     }
 
@@ -836,6 +1080,30 @@ public class MainForm : Form
         catch (Exception ex)
         {
             ShowError("Agregasyon başarısız", ex.Message);
+        }
+    }
+
+    private async Task ResetWorkOrderAsync(Guid id)
+    {
+        SetStatus("İş emri resetleniyor...");
+
+        try
+        {
+            await _apiClient.ResetWorkOrderAsync(id);
+            MessageBox.Show(
+                "İş emri başarıyla resetlendi!\n\n" +
+                "• Tüm seriler 'Üretildi' durumuna döndürüldü\n" +
+                "• Koli ve paletler silindi\n" +
+                "• İş emri durumu 'Oluşturuldu' yapıldı",
+                "Resetleme Başarılı",
+                MessageBoxButtons.OK,
+                MessageBoxIcon.Information);
+
+            await ShowWorkOrderDetailAsync(id);
+        }
+        catch (Exception ex)
+        {
+            ShowError("Resetleme başarısız", ex.Message);
         }
     }
 

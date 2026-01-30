@@ -232,4 +232,31 @@ public class WorkOrderService
         await _context.SaveChangesAsync();
         return true;
     }
+
+    public async Task<bool> ResetWorkOrderAsync(Guid id)
+    {
+        var workOrder = await _context.WorkOrders
+            .Include(w => w.SerialNumbers)
+            .Include(w => w.PackingUnits)
+            .FirstOrDefaultAsync(w => w.Id == id);
+
+        if (workOrder == null)
+            return false;
+
+        // Tüm serileri Generated durumuna al ve paket bağlantılarını kaldır
+        foreach (var serial in workOrder.SerialNumbers)
+        {
+            serial.Durum = SerialNumberStatus.Generated;
+            serial.PackingUnitId = null;
+        }
+
+        // Tüm paketleme birimlerini sil
+        _context.PackingUnits.RemoveRange(workOrder.PackingUnits);
+
+        // İş emri durumunu Created yap
+        workOrder.Durum = WorkOrderStatus.Created;
+
+        await _context.SaveChangesAsync();
+        return true;
+    }
 }
