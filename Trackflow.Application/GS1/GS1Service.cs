@@ -57,4 +57,36 @@ public class GS1Service
 
         return checkDigit == calculatedCheckDigit;
     }
+
+    /// <summary>
+    /// Benzersiz GLN (Global Location Number) üretir
+    /// Format: 869 XXXX XXXXX C (13 hane)
+    /// 869 = Türkiye ülke kodu
+    /// </summary>
+    public string GenerateGLN()
+    {
+        var random = new Random();
+        var prefix = "869"; // Türkiye
+        var companyNumber = random.Next(0, 10000).ToString("D4");
+        var locationRef = random.Next(0, 100000).ToString("D5");
+
+        var glnWithoutCheck = prefix + companyNumber + locationRef;
+        var checkDigit = CalculateGLNCheckDigit(glnWithoutCheck);
+
+        return glnWithoutCheck + checkDigit;
+    }
+
+    /// <summary>
+    /// GLN check digit hesaplar (Mod 10 algoritması)
+    /// </summary>
+    public int CalculateGLNCheckDigit(string glnWithoutCheckDigit)
+    {
+        var digits = glnWithoutCheckDigit.Select(c => int.Parse(c.ToString())).ToArray();
+        var sum = 0;
+        for (int i = 0; i < digits.Length; i++)
+        {
+            sum += digits[i] * (i % 2 == 0 ? 1 : 3);
+        }
+        return (10 - (sum % 10)) % 10;
+    }
 }

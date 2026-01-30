@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Trackflow.Application.DTOs;
 using Trackflow.Application.GS1;
 using Trackflow.Domain.Entities;
-using Trackflow.Domain.Enums;
 using Trackflow.Infrastructure.Data;
+using Trackflow.Shared.DTOs;
+using Trackflow.Shared.Enums;
 
 namespace Trackflow.Application.Services;
 
@@ -226,14 +226,4 @@ public class AggregationService
             ItemCount = boxes.Count
         };
     }
-}
-
-public class AggregationResultDto
-{
-    public Guid WorkOrderId { get; set; }
-    public int TotalSerials { get; set; }
-    public int TotalBoxes { get; set; }
-    public int TotalPallets { get; set; }
-    public int BoxCapacity { get; set; }
-    public int PalletCapacity { get; set; }
 }

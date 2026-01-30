@@ -1,4 +1,6 @@
 using Trackflow.Client.Services;
+using Trackflow.Shared.DTOs;
+using Trackflow.Shared.Enums;
 
 namespace Trackflow.Client.Forms;
 
@@ -49,10 +51,6 @@ public class MainForm : Form
         var btnWorkOrders = CreateMenuButton("İş Emirleri", 230);
         btnWorkOrders.Click += async (s, e) => await ShowWorkOrdersAsync();
         menuPanel.Controls.Add(btnWorkOrders);
-
-        var btnNewWorkOrder = CreateMenuButton("Yeni İş Emri", 280);
-        btnNewWorkOrder.Click += (s, e) => ShowNewWorkOrderForm();
-        menuPanel.Controls.Add(btnNewWorkOrder);
 
         // Status Bar
         _statusLabel = new Label
@@ -192,6 +190,40 @@ public class MainForm : Form
             };
             _contentPanel.Controls.Add(titleLabel);
 
+            var btnNewCustomer = new Button
+            {
+                Text = "+ Yeni Müşteri",
+                Location = new Point(_contentPanel.Width - 170, 20),
+                Size = new Size(130, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(0, 122, 204),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnNewCustomer.Click += (s, e) => ShowNewCustomerForm();
+            _contentPanel.Controls.Add(btnNewCustomer);
+
+            var btnEdit = new Button
+            {
+                Text = "Düzenle",
+                Location = new Point(_contentPanel.Width - 420, 20),
+                Size = new Size(100, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            _contentPanel.Controls.Add(btnEdit);
+
+            var btnDelete = new Button
+            {
+                Text = "Sil",
+                Location = new Point(_contentPanel.Width - 310, 20),
+                Size = new Size(100, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(220, 53, 69),
+                ForeColor = Color.White
+            };
+            _contentPanel.Controls.Add(btnDelete);
+
             var grid = new DataGridView
             {
                 Location = new Point(20, 70),
@@ -200,20 +232,72 @@ public class MainForm : Form
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 ReadOnly = true,
                 AllowUserToAddRows = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None
             };
 
+            grid.Columns.Add("Id", "ID");
+            grid.Columns["Id"]!.Visible = false;
             grid.Columns.Add("FirmaAdi", "Firma Adı");
             grid.Columns.Add("GLN", "GLN");
             grid.Columns.Add("Aciklama", "Açıklama");
 
             foreach (var c in customers)
             {
-                grid.Rows.Add(c.FirmaAdi, c.GLN, c.Aciklama);
+                grid.Rows.Add(c.Id, c.FirmaAdi, c.GLN, c.Aciklama);
             }
 
             _contentPanel.Controls.Add(grid);
+
+            btnEdit.Click += (s, e) =>
+            {
+                if (grid.SelectedRows.Count > 0)
+                {
+                    var row = grid.SelectedRows[0];
+                    var customer = new CustomerDto
+                    {
+                        Id = Guid.Parse(row.Cells["Id"].Value?.ToString() ?? ""),
+                        FirmaAdi = row.Cells["FirmaAdi"].Value?.ToString() ?? "",
+                        GLN = row.Cells["GLN"].Value?.ToString() ?? "",
+                        Aciklama = row.Cells["Aciklama"].Value?.ToString()
+                    };
+                    var form = new NewCustomerForm(_apiClient, customer);
+                    if (form.ShowDialog() == DialogResult.OK)
+                    {
+                        _ = ShowCustomersAsync();
+                    }
+                }
+            };
+
+            btnDelete.Click += async (s, e) =>
+            {
+                if (grid.SelectedRows.Count > 0)
+                {
+                    var id = Guid.Parse(grid.SelectedRows[0].Cells["Id"].Value?.ToString() ?? "");
+                    var firmaAdi = grid.SelectedRows[0].Cells["FirmaAdi"].Value?.ToString();
+
+                    var result = MessageBox.Show(
+                        $"\"{firmaAdi}\" müşterisini silmek istediğinizden emin misiniz?",
+                        "Silme Onayı",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        try
+                        {
+                            await _apiClient.DeleteCustomerAsync(id);
+                            await ShowCustomersAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Silme hatası: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            };
+
             SetStatus($"{customers.Count} müşteri listelendi");
         }
         catch (Exception ex)
@@ -240,6 +324,40 @@ public class MainForm : Form
             };
             _contentPanel.Controls.Add(titleLabel);
 
+            var btnNewProduct = new Button
+            {
+                Text = "+ Yeni Ürün",
+                Location = new Point(_contentPanel.Width - 170, 20),
+                Size = new Size(130, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(0, 122, 204),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnNewProduct.Click += (s, e) => ShowNewProductForm();
+            _contentPanel.Controls.Add(btnNewProduct);
+
+            var btnEdit = new Button
+            {
+                Text = "Düzenle",
+                Location = new Point(_contentPanel.Width - 420, 20),
+                Size = new Size(100, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right
+            };
+            _contentPanel.Controls.Add(btnEdit);
+
+            var btnDelete = new Button
+            {
+                Text = "Sil",
+                Location = new Point(_contentPanel.Width - 310, 20),
+                Size = new Size(100, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(220, 53, 69),
+                ForeColor = Color.White
+            };
+            _contentPanel.Controls.Add(btnDelete);
+
             var grid = new DataGridView
             {
                 Location = new Point(20, 70),
@@ -248,20 +366,75 @@ public class MainForm : Form
                 AutoSizeColumnsMode = DataGridViewAutoSizeColumnsMode.Fill,
                 ReadOnly = true,
                 AllowUserToAddRows = false,
+                SelectionMode = DataGridViewSelectionMode.FullRowSelect,
                 BackgroundColor = Color.White,
                 BorderStyle = BorderStyle.None
             };
 
+            grid.Columns.Add("Id", "ID");
+            grid.Columns["Id"]!.Visible = false;
+            grid.Columns.Add("CustomerId", "CustomerId");
+            grid.Columns["CustomerId"]!.Visible = false;
             grid.Columns.Add("UrunAdi", "Ürün Adı");
             grid.Columns.Add("GTIN", "GTIN");
             grid.Columns.Add("CustomerName", "Müşteri");
 
             foreach (var p in products)
             {
-                grid.Rows.Add(p.UrunAdi, p.GTIN, p.CustomerName);
+                grid.Rows.Add(p.Id, p.CustomerId, p.UrunAdi, p.GTIN, p.CustomerName);
             }
 
             _contentPanel.Controls.Add(grid);
+
+            btnEdit.Click += (s, e) =>
+            {
+                if (grid.SelectedRows.Count > 0)
+                {
+                    var row = grid.SelectedRows[0];
+                    var product = new ProductDto
+                    {
+                        Id = Guid.Parse(row.Cells["Id"].Value?.ToString() ?? ""),
+                        CustomerId = Guid.Parse(row.Cells["CustomerId"].Value?.ToString() ?? ""),
+                        UrunAdi = row.Cells["UrunAdi"].Value?.ToString() ?? "",
+                        GTIN = row.Cells["GTIN"].Value?.ToString() ?? "",
+                        CustomerName = row.Cells["CustomerName"].Value?.ToString() ?? ""
+                    };
+                    var form = new NewProductForm(_apiClient, product);
+                    if (form.ShowDialog() == DialogResult.OK)
+                    {
+                        _ = ShowProductsAsync();
+                    }
+                }
+            };
+
+            btnDelete.Click += async (s, e) =>
+            {
+                if (grid.SelectedRows.Count > 0)
+                {
+                    var id = Guid.Parse(grid.SelectedRows[0].Cells["Id"].Value?.ToString() ?? "");
+                    var urunAdi = grid.SelectedRows[0].Cells["UrunAdi"].Value?.ToString();
+
+                    var result = MessageBox.Show(
+                        $"\"{urunAdi}\" ürününü silmek istediğinizden emin misiniz?",
+                        "Silme Onayı",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        try
+                        {
+                            await _apiClient.DeleteProductAsync(id);
+                            await ShowProductsAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Silme hatası: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            };
+
             SetStatus($"{products.Count} ürün listelendi");
         }
         catch (Exception ex)
@@ -288,6 +461,31 @@ public class MainForm : Form
             };
             _contentPanel.Controls.Add(titleLabel);
 
+            var btnNewWorkOrder = new Button
+            {
+                Text = "+ Yeni İş Emri",
+                Location = new Point(_contentPanel.Width - 170, 20),
+                Size = new Size(130, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(0, 122, 204),
+                ForeColor = Color.White,
+                FlatStyle = FlatStyle.Flat,
+                Cursor = Cursors.Hand
+            };
+            btnNewWorkOrder.Click += (s, e) => ShowNewWorkOrderForm();
+            _contentPanel.Controls.Add(btnNewWorkOrder);
+
+            var btnDeleteWorkOrder = new Button
+            {
+                Text = "Sil",
+                Location = new Point(_contentPanel.Width - 310, 20),
+                Size = new Size(100, 35),
+                Anchor = AnchorStyles.Top | AnchorStyles.Right,
+                BackColor = Color.FromArgb(220, 53, 69),
+                ForeColor = Color.White
+            };
+            _contentPanel.Controls.Add(btnDeleteWorkOrder);
+
             var grid = new DataGridView
             {
                 Location = new Point(20, 70),
@@ -313,7 +511,8 @@ public class MainForm : Form
 
             foreach (var w in workOrders)
             {
-                var durum = w.Durum >= 0 && w.Durum < durumlar.Length ? durumlar[w.Durum] : "?";
+                var durumInt = (int)w.Durum;
+                var durum = durumInt >= 0 && durumInt < durumlar.Length ? durumlar[durumInt] : "?";
                 grid.Rows.Add(w.Id, w.ProductName, w.LotNo, w.Miktar, w.SonKullanmaTarihi.ToString("dd.MM.yyyy"), durum);
             }
 
@@ -354,6 +553,34 @@ public class MainForm : Form
                 }
             };
             _contentPanel.Controls.Add(btnAggregate);
+
+            btnDeleteWorkOrder.Click += async (s, e) =>
+            {
+                if (grid.SelectedRows.Count > 0)
+                {
+                    var id = Guid.Parse(grid.SelectedRows[0].Cells["Id"].Value?.ToString() ?? "");
+                    var lotNo = grid.SelectedRows[0].Cells["LotNo"].Value?.ToString();
+
+                    var result = MessageBox.Show(
+                        $"\"{lotNo}\" iş emrini silmek istediğinizden emin misiniz?\n\nBu işlem tüm seri numaralarını ve paketleme birimlerini de silecektir!",
+                        "Silme Onayı",
+                        MessageBoxButtons.YesNo,
+                        MessageBoxIcon.Warning);
+
+                    if (result == DialogResult.Yes)
+                    {
+                        try
+                        {
+                            await _apiClient.DeleteWorkOrderAsync(id);
+                            await ShowWorkOrdersAsync();
+                        }
+                        catch (Exception ex)
+                        {
+                            MessageBox.Show($"Silme hatası: {ex.Message}", "Hata", MessageBoxButtons.OK, MessageBoxIcon.Error);
+                        }
+                    }
+                }
+            };
 
             SetStatus($"{workOrders.Count} iş emri listelendi");
         }
@@ -438,7 +665,8 @@ public class MainForm : Form
 
             foreach (var s in detail.SerialNumbers.Take(100)) // İlk 100
             {
-                var durum = s.Durum >= 0 && s.Durum < durumlar.Length ? durumlar[s.Durum] : "?";
+                var durumInt = (int)s.Durum;
+                var durum = durumInt >= 0 && durumInt < durumlar.Length ? durumlar[durumInt] : "?";
                 serialGrid.Rows.Add(s.SeriNo, s.GS1Barkod, durum);
             }
 
@@ -492,6 +720,24 @@ public class MainForm : Form
         if (form.ShowDialog() == DialogResult.OK)
         {
             _ = ShowWorkOrdersAsync();
+        }
+    }
+
+    private void ShowNewCustomerForm()
+    {
+        var form = new NewCustomerForm(_apiClient);
+        if (form.ShowDialog() == DialogResult.OK)
+        {
+            _ = ShowCustomersAsync();
+        }
+    }
+
+    private void ShowNewProductForm()
+    {
+        var form = new NewProductForm(_apiClient);
+        if (form.ShowDialog() == DialogResult.OK)
+        {
+            _ = ShowProductsAsync();
         }
     }
 

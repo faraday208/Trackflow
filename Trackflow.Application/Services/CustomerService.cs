@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Trackflow.Application.DTOs;
 using Trackflow.Domain.Entities;
 using Trackflow.Infrastructure.Data;
+using Trackflow.Shared.DTOs;
 
 namespace Trackflow.Application.Services;
 
@@ -76,5 +76,27 @@ public class CustomerService
         _context.Customers.Remove(customer);
         await _context.SaveChangesAsync();
         return true;
+    }
+
+    public async Task<CustomerDto?> UpdateAsync(Guid id, UpdateCustomerDto dto)
+    {
+        var customer = await _context.Customers.FindAsync(id);
+        if (customer == null)
+            return null;
+
+        customer.FirmaAdi = dto.FirmaAdi;
+        customer.GLN = dto.GLN;
+        customer.Aciklama = dto.Aciklama;
+
+        await _context.SaveChangesAsync();
+
+        return new CustomerDto
+        {
+            Id = customer.Id,
+            FirmaAdi = customer.FirmaAdi,
+            GLN = customer.GLN,
+            Aciklama = customer.Aciklama,
+            CreatedAt = customer.CreatedAt
+        };
     }
 }

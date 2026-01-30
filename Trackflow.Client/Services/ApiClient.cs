@@ -1,5 +1,6 @@
 using System.Net.Http.Json;
 using System.Text.Json;
+using Trackflow.Shared.DTOs;
 
 namespace Trackflow.Client.Services;
 
@@ -11,7 +12,7 @@ public class ApiClient
         PropertyNameCaseInsensitive = true
     };
 
-    public ApiClient(string baseUrl = "http://localhost:5000")
+    public ApiClient(string baseUrl = "http://localhost:5101")
     {
         _httpClient = new HttpClient { BaseAddress = new Uri(baseUrl) };
     }
@@ -28,10 +29,56 @@ public class ApiClient
         return await _httpClient.GetFromJsonAsync<List<CustomerDto>>("/api/customers", _jsonOptions) ?? new();
     }
 
+    public async Task<CustomerDto?> CreateCustomerAsync(CreateCustomerDto dto)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/api/customers", dto);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CustomerDto>(_jsonOptions);
+    }
+
+    public async Task<string> GenerateGLNAsync()
+    {
+        var response = await _httpClient.GetFromJsonAsync<JsonElement>("/api/customers/generate-gln", _jsonOptions);
+        return response.GetProperty("gln").GetString() ?? "";
+    }
+
+    public async Task<CustomerDto?> UpdateCustomerAsync(Guid id, CreateCustomerDto dto)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"/api/customers/{id}", dto);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<CustomerDto>(_jsonOptions);
+    }
+
+    public async Task DeleteCustomerAsync(Guid id)
+    {
+        var response = await _httpClient.DeleteAsync($"/api/customers/{id}");
+        response.EnsureSuccessStatusCode();
+    }
+
     // Products
     public async Task<List<ProductDto>> GetProductsAsync()
     {
         return await _httpClient.GetFromJsonAsync<List<ProductDto>>("/api/products", _jsonOptions) ?? new();
+    }
+
+    public async Task<ProductDto?> CreateProductAsync(CreateProductDto dto)
+    {
+        var response = await _httpClient.PostAsJsonAsync("/api/products", dto);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<ProductDto>(_jsonOptions);
+    }
+
+    public async Task<ProductDto?> UpdateProductAsync(Guid id, CreateProductDto dto)
+    {
+        var response = await _httpClient.PutAsJsonAsync($"/api/products/{id}", dto);
+        response.EnsureSuccessStatusCode();
+        return await response.Content.ReadFromJsonAsync<ProductDto>(_jsonOptions);
+    }
+
+    public async Task DeleteProductAsync(Guid id)
+    {
+        var response = await _httpClient.DeleteAsync($"/api/products/{id}");
+        response.EnsureSuccessStatusCode();
     }
 
     // Work Orders
@@ -52,117 +99,16 @@ public class ApiClient
         return await response.Content.ReadFromJsonAsync<WorkOrderDto>(_jsonOptions);
     }
 
+    public async Task DeleteWorkOrderAsync(Guid id)
+    {
+        var response = await _httpClient.DeleteAsync($"/api/workorders/{id}");
+        response.EnsureSuccessStatusCode();
+    }
+
     public async Task<AggregationResultDto?> AggregateWorkOrderAsync(Guid id)
     {
         var response = await _httpClient.PostAsync($"/api/workorders/{id}/aggregate", null);
         response.EnsureSuccessStatusCode();
         return await response.Content.ReadFromJsonAsync<AggregationResultDto>(_jsonOptions);
     }
-}
-
-// DTOs
-public class HealthReportDto
-{
-    public string Status { get; set; } = "";
-    public DateTime Timestamp { get; set; }
-    public string TotalDuration { get; set; } = "";
-    public List<HealthCheckDto> Checks { get; set; } = new();
-}
-
-public class HealthCheckDto
-{
-    public string Name { get; set; } = "";
-    public string Status { get; set; } = "";
-    public string Duration { get; set; } = "";
-    public string? Description { get; set; }
-    public string? Exception { get; set; }
-}
-
-public class CustomerDto
-{
-    public Guid Id { get; set; }
-    public string FirmaAdi { get; set; } = "";
-    public string GLN { get; set; } = "";
-    public string? Aciklama { get; set; }
-}
-
-public class ProductDto
-{
-    public Guid Id { get; set; }
-    public Guid CustomerId { get; set; }
-    public string CustomerName { get; set; } = "";
-    public string GTIN { get; set; } = "";
-    public string UrunAdi { get; set; } = "";
-}
-
-public class WorkOrderDto
-{
-    public Guid Id { get; set; }
-    public Guid ProductId { get; set; }
-    public string ProductName { get; set; } = "";
-    public string GTIN { get; set; } = "";
-    public int Miktar { get; set; }
-    public string LotNo { get; set; } = "";
-    public DateTime SonKullanmaTarihi { get; set; }
-    public int Durum { get; set; }
-    public int KoliKapasitesi { get; set; }
-    public int PaletKapasitesi { get; set; }
-    public DateTime CreatedAt { get; set; }
-}
-
-public class WorkOrderDetailDto
-{
-    public Guid Id { get; set; }
-    public int Miktar { get; set; }
-    public string LotNo { get; set; } = "";
-    public DateTime SonKullanmaTarihi { get; set; }
-    public int Durum { get; set; }
-    public int KoliKapasitesi { get; set; }
-    public int PaletKapasitesi { get; set; }
-    public ProductDto Product { get; set; } = null!;
-    public CustomerDto Customer { get; set; } = null!;
-    public List<SerialNumberDto> SerialNumbers { get; set; } = new();
-    public List<PackingUnitDto> PackingUnits { get; set; } = new();
-    public int TotalSerials { get; set; }
-    public int AggregatedSerials { get; set; }
-    public int TotalBoxes { get; set; }
-    public int TotalPallets { get; set; }
-}
-
-public class SerialNumberDto
-{
-    public Guid Id { get; set; }
-    public string SeriNo { get; set; } = "";
-    public int Durum { get; set; }
-    public string GS1Barkod { get; set; } = "";
-    public Guid? PackingUnitId { get; set; }
-}
-
-public class PackingUnitDto
-{
-    public Guid Id { get; set; }
-    public int Tip { get; set; }
-    public string SSCC { get; set; } = "";
-    public Guid? ParentId { get; set; }
-    public int ItemCount { get; set; }
-    public List<PackingUnitDto> Children { get; set; } = new();
-}
-
-public class CreateWorkOrderDto
-{
-    public Guid ProductId { get; set; }
-    public int Miktar { get; set; }
-    public string LotNo { get; set; } = "";
-    public DateTime SonKullanmaTarihi { get; set; }
-    public int SeriBaslangic { get; set; } = 1;
-    public int KoliKapasitesi { get; set; } = 10;
-    public int PaletKapasitesi { get; set; } = 10;
-}
-
-public class AggregationResultDto
-{
-    public Guid WorkOrderId { get; set; }
-    public int TotalSerials { get; set; }
-    public int TotalBoxes { get; set; }
-    public int TotalPallets { get; set; }
 }

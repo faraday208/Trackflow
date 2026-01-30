@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Trackflow.Domain.Entities;
+using Trackflow.Shared.Enums;
 
 namespace Trackflow.Infrastructure.Data;
 
@@ -96,7 +97,7 @@ public class AppDbContext : DbContext
             LotNo = "LOT001",
             SonKullanmaTarihi = new DateTime(2026, 12, 31, 0, 0, 0, DateTimeKind.Utc),
             SeriBaslangic = 1,
-            Durum = Domain.Enums.WorkOrderStatus.Created,
+            Durum = WorkOrderStatus.Created,
             KoliKapasitesi = 10,
             PaletKapasitesi = 10,
             CreatedAt = new DateTime(2025, 1, 1, 0, 0, 0, DateTimeKind.Utc)

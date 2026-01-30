@@ -1,4 +1,4 @@
-namespace Trackflow.Domain.Enums;
+namespace Trackflow.Shared.Enums;
 
 public enum PackingUnitType
 {

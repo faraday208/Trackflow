@@ -1,7 +1,7 @@
 using Microsoft.EntityFrameworkCore;
-using Trackflow.Application.DTOs;
 using Trackflow.Domain.Entities;
 using Trackflow.Infrastructure.Data;
+using Trackflow.Shared.DTOs;
 
 namespace Trackflow.Application.Services;
 
@@ -81,6 +81,33 @@ public class ProductService
         };
 
         _context.Products.Add(product);
+        await _context.SaveChangesAsync();
+
+        return new ProductDto
+        {
+            Id = product.Id,
+            CustomerId = product.CustomerId,
+            CustomerName = customer.FirmaAdi,
+            GTIN = product.GTIN,
+            UrunAdi = product.UrunAdi,
+            CreatedAt = product.CreatedAt
+        };
+    }
+
+    public async Task<ProductDto?> UpdateAsync(Guid id, UpdateProductDto dto)
+    {
+        var product = await _context.Products.FindAsync(id);
+        if (product == null)
+            return null;
+
+        var customer = await _context.Customers.FindAsync(dto.CustomerId);
+        if (customer == null)
+            return null;
+
+        product.CustomerId = dto.CustomerId;
+        product.GTIN = dto.GTIN;
+        product.UrunAdi = dto.UrunAdi;
+
         await _context.SaveChangesAsync();
 
         return new ProductDto

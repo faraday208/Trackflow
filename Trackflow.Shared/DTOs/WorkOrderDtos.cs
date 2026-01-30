@@ -1,6 +1,6 @@
-using Trackflow.Domain.Enums;
+using Trackflow.Shared.Enums;
 
-namespace Trackflow.Application.DTOs;
+namespace Trackflow.Shared.DTOs;
 
 public class WorkOrderDto
 {
@@ -39,19 +39,11 @@ public class WorkOrderDetailDto
     public int PaletKapasitesi { get; set; }
     public DateTime CreatedAt { get; set; }
 
-    // Product info
     public ProductDto Product { get; set; } = null!;
-
-    // Customer info
     public CustomerDto Customer { get; set; } = null!;
-
-    // Serial numbers
     public List<SerialNumberDto> SerialNumbers { get; set; } = new();
-
-    // Packing units
     public List<PackingUnitDto> PackingUnits { get; set; } = new();
 
-    // Stats
     public int TotalSerials { get; set; }
     public int AggregatedSerials { get; set; }
     public int TotalBoxes { get; set; }
@@ -75,4 +67,14 @@ public class PackingUnitDto
     public Guid? ParentId { get; set; }
     public int ItemCount { get; set; }
     public List<PackingUnitDto> Children { get; set; } = new();
+}
+
+public class AggregationResultDto
+{
+    public Guid WorkOrderId { get; set; }
+    public int TotalSerials { get; set; }
+    public int TotalBoxes { get; set; }
+    public int TotalPallets { get; set; }
+    public int BoxCapacity { get; set; }
+    public int PalletCapacity { get; set; }
 }

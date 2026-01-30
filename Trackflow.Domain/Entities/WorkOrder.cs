@@ -1,4 +1,4 @@
-using Trackflow.Domain.Enums;
+using Trackflow.Shared.Enums;
 
 namespace Trackflow.Domain.Entities;
 

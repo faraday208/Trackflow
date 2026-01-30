@@ -3,6 +3,7 @@
   <ItemGroup>
     <ProjectReference Include="..\Trackflow.Application\Trackflow.Application.csproj" />
     <ProjectReference Include="..\Trackflow.Infrastructure\Trackflow.Infrastructure.csproj" />
+    <ProjectReference Include="..\Trackflow.Shared\Trackflow.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

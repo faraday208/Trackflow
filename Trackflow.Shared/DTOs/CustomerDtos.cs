@@ -1,4 +1,4 @@
-namespace Trackflow.Application.DTOs;
+namespace Trackflow.Shared.DTOs;
 
 public class CustomerDto
 {
@@ -10,6 +10,13 @@ public class CustomerDto
 }
 
 public class CreateCustomerDto
+{
+    public string FirmaAdi { get; set; } = string.Empty;
+    public string GLN { get; set; } = string.Empty;
+    public string? Aciklama { get; set; }
+}
+
+public class UpdateCustomerDto
 {
     public string FirmaAdi { get; set; } = string.Empty;
     public string GLN { get; set; } = string.Empty;

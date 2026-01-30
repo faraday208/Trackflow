@@ -2,6 +2,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\Trackflow.Domain\Trackflow.Domain.csproj" />
+    <ProjectReference Include="..\Trackflow.Shared\Trackflow.Shared.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
-using Trackflow.Application.DTOs;
 using Trackflow.Application.GS1;
 using Trackflow.Domain.Entities;
-using Trackflow.Domain.Enums;
 using Trackflow.Infrastructure.Data;
+using Trackflow.Shared.DTOs;
+using Trackflow.Shared.Enums;
 
 namespace Trackflow.Application.Services;
 

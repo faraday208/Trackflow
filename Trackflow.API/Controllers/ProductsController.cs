@@ -1,6 +1,6 @@
 using Microsoft.AspNetCore.Mvc;
-using Trackflow.Application.DTOs;
 using Trackflow.Application.Services;
+using Trackflow.Shared.DTOs;
 
 namespace Trackflow.API.Controllers;
 
@@ -51,6 +51,15 @@ public class ProductsController : ControllerBase
         {
             return BadRequest(ex.Message);
         }
+    }
+
+    [HttpPut("{id:guid}")]
+    public async Task<ActionResult<ProductDto>> Update(Guid id, UpdateProductDto dto)
+    {
+        var product = await _productService.UpdateAsync(id, dto);
+        if (product == null)
+            return NotFound();
+        return Ok(product);
     }
 
     [HttpDelete("{id:guid}")]

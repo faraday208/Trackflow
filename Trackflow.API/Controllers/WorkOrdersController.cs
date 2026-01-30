@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
-using Trackflow.Application.DTOs;
 using Trackflow.Application.Services;
-using Trackflow.Domain.Enums;
+using Trackflow.Shared.DTOs;
+using Trackflow.Shared.Enums;
 
 namespace Trackflow.API.Controllers;
 
